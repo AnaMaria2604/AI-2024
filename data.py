@@ -12,4 +12,3 @@ for row in sheet.iter_rows(min_row=2, values_only=True):
 
 print(data) # aici avem intr-o lista, fiecare linie din doc
 print(len(data))
-
