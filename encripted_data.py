@@ -1,6 +1,7 @@
 from data import data_without_duplicates
 import random
 
+
 def encoding():
     '''Aici vom face ca un fel de parola unica de 12 caractere de la 0 la 9 '''
     ch = []
@@ -17,28 +18,60 @@ def encoding():
 
     return password
 
-encripting = {} #aici stocam toate variabilele schimbate si cu ce sunt ele schimate
-temp_values = [] #aici stocam toate valorile pe care le schimbam
-unique_numbers=[] # aici stocam toate valorile unice cu care schimbam valorile din timp_values
-data_numerical=data_without_duplicates
 
-for dictionar in data_numerical:
-    for cheie, valoare in dictionar.items():
-        if not isinstance(valoare, (int, float)) and not valoare.isdigit(): #vedem daca nu e int sau float sau daca nu e string ce poate fi int
-            if valoare not in temp_values: #daca nu am schimbat deja anterior variabila
+data_numerical = data_without_duplicates
+
+encripting_per_header = {}  # pt fiecare coloana-> cuvant: encriptare numerica
+temp_values_per_header = {}  # pt fiecare coloana-> valorile care au deja asociate un nr
+unique_numbers_per_header = {}  # pt fiecare coloana-> numerele asociate variabilelor din temp_values_per_header
+non_numeric_count_per_header = {}  # pt fiecare coloana-> cate valori non-numerice
+distinct_non_numeric_values = []  # nr total de valori non-numerice gasite
+distinct_non_numeric_count_per_column = {}  # pentru fiecare coloana-> cate valori non-numerice sunt
+
+for d in data_numerical:
+    for cheie, valoare in d.items():
+        if not isinstance(valoare, (int, float)) and not valoare.isdigit():
+
+            if cheie not in temp_values_per_header:
+                temp_values_per_header[cheie] = []
+                unique_numbers_per_header[cheie] = []
+                encripting_per_header[cheie] = {}
+                non_numeric_count_per_header[cheie] = 0
+                distinct_non_numeric_count_per_column[cheie] = set()
+
+            non_numeric_count_per_header[cheie] += 1
+            if valoare not in distinct_non_numeric_values:
+                distinct_non_numeric_values.append(valoare)
+            distinct_non_numeric_count_per_column[cheie].add(valoare)
+
+            if valoare not in temp_values_per_header[cheie]:
                 temp = encoding()
-                while temp in unique_numbers: #generam numere pana cand gasim unul care nu a mai fost folosit
+
+                while temp in unique_numbers_per_header[cheie]:
                     temp = encoding()
-                unique_numbers.append(temp)
 
-                temp_values.append(valoare)
-                encripting[valoare] = temp
-                dictionar[cheie] = temp #inlocuim valoarea
+                unique_numbers_per_header[cheie].append(temp)
+
+                temp_values_per_header[cheie].append(valoare)
+                encripting_per_header[cheie][valoare] = temp
+                d[cheie] = temp
             else:
-                dictionar[cheie] = encripting[valoare] #inlocuim valoarea cu cea deja generata in alti pasi
+                d[cheie] = encripting_per_header[cheie][valoare]
 
-print(data_numerical)
+# print(data_numerical)
 
-print("These are the encripted values:")
-for cheie in encripting:
-    print(cheie, ":", encripting[cheie])
+print("\n-------------------------------------------------------------------------------------------------------------")
+print(f"Non-numeric distinct values count per column(in total {len(distinct_non_numeric_values)}):")
+for cheie, distinct_values in distinct_non_numeric_count_per_column.items():
+    print(f"{cheie}: {len(distinct_values)} distinct non-numeric values")
+
+print("\n-------------------------------------------------------------------------------------------------------------")
+for cheie in encripting_per_header:
+    print(f"\nThese are the encripted values for {cheie}:")
+    for valoare in encripting_per_header[cheie]:
+        print(valoare, ":", encripting_per_header[cheie][valoare])
+
+# print("\n-------------------------------------------------------------------------------------------------------------")
+# print(f"Total distinct non-numeric values: {len(distinct_non_numeric_values)}")
+# print("Distinct non-numeric values found:")
+# print(distinct_non_numeric_values)
