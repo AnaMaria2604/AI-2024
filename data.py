@@ -1,6 +1,7 @@
 from openpyxl import load_workbook  # pentru a ne ajuta sa trecem prin sheetul de excel
 
-date = load_workbook("first_sheet_from_data.xlsx")  # ce doc de excel alegem
+date = load_workbook("C:/Users/Dell/Desktop/AI-nou/AI-2024/first_sheet_from_data.xlsx")
+ # ce doc de excel alegem
 
 sheet = date.active  # alegem acel sheet din doc excel din care dorim sa extragem datele
 

@@ -8,6 +8,7 @@ original_stdout = sys.stdout
 sys.stdout = open(os.devnull, 'w') # mute print
 
 from data import data_without_duplicates
+#data_without_duplicates = pd.read_json("balanced_data.json")
 
 sys.stdout = original_stdout # unmute print
 
