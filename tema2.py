@@ -28,15 +28,15 @@ y_test_encoded = np.eye(num_classes)[y_test_mapped]
 
 #Parametri retea 
 input_size = X_train.shape[1]
-hidden_size = 150  
+hidden_size = 40
 output_size = num_classes
 learning_rate = 0.01
-epochs = 1000
+epochs = 10000
 
-# Initialize weights with Xavier initialization
+# Inițializare He (He Initialization):
 np.random.seed(42)
-W1 = np.random.randn(input_size, hidden_size) * np.sqrt(1 / input_size)
-W2 = np.random.randn(hidden_size, output_size) * np.sqrt(1 / hidden_size)
+W1 = np.random.randn(input_size, hidden_size) * np.sqrt(2 / input_size)
+W2 = np.random.randn(hidden_size, output_size) * np.sqrt(2 / hidden_size)
 
 def relu(x):
     return np.maximum(0, x)
