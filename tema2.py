@@ -32,21 +32,21 @@ y_test_encoded = np.eye(num_classes)[y_test_mapped]
 
 # Parametri rețea
 input_size = X_train.shape[1]
-hidden1_size = 54
-hidden2_size = 40
-hidden3_size = 30  # Noul strat ascuns
+hidden1_size = 60
+hidden2_size = 50
+hidden3_size = 40  # Noul strat ascuns
 output_size = num_classes
 learning_rate = 0.01
-epochs = 10000
+epochs = 1000
+batch_size = 64  # Dimensiunea unui mini-batch
+lambda_l2 = 0.01  # Factor de regularizare L2
 
-# Inițializare greutăți cu He Initialization
 np.random.seed(42)
 W1 = np.random.randn(input_size, hidden1_size) * np.sqrt(2 / input_size)
 W2 = np.random.randn(hidden1_size, hidden2_size) * np.sqrt(2 / hidden1_size)
 W3 = np.random.randn(hidden2_size, hidden3_size) * np.sqrt(2 / hidden2_size)
 W4 = np.random.randn(hidden3_size, output_size) * np.sqrt(2 / hidden3_size)
 
-# Funcții auxiliare
 def relu(x):
     return np.maximum(0, x)
 
@@ -64,42 +64,55 @@ def accuracy(y_pred, y_true):
     acc = y_pred.argmax(axis=1) == y_true.argmax(axis=1)
     return acc.mean()
 
-# Antrenare rețea
+def create_batches(X, y, batch_size):
+    indices = np.arange(X.shape[0])
+    np.random.shuffle(indices)
+    X_shuffled = X[indices]
+    y_shuffled = y[indices]
+    for start in range(0, X.shape[0], batch_size):
+        end = min(start + batch_size, X.shape[0])
+        yield X_shuffled[start:end], y_shuffled[start:end]
+
 for epoch in range(epochs):
-    # Forward propagation
-    Z1 = np.dot(X_train, W1)
-    A1 = relu(Z1)
-    Z2 = np.dot(A1, W2)
-    A2 = relu(Z2)
-    Z3 = np.dot(A2, W3)
-    A3 = relu(Z3)
-    Z4 = np.dot(A3, W4)
-    A4 = softmax(Z4)
+    epoch_loss = 0
+    for X_batch, y_batch in create_batches(X_train, y_train_encoded, batch_size):
+        # Forward propagation
+        Z1 = np.dot(X_batch, W1)
+        A1 = relu(Z1)
+        Z2 = np.dot(A1, W2)
+        A2 = relu(Z2)
+        Z3 = np.dot(A2, W3)
+        A3 = relu(Z3)
+        Z4 = np.dot(A3, W4)
+        A4 = softmax(Z4)
 
-    # Calculul pierderii și acurateței
-    loss = cross_entropy_loss(A4, y_train_encoded)
+        # Calculul pierderii cu regularizare L2
+        loss = cross_entropy_loss(A4, y_batch) + \
+               (lambda_l2 / 2) * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2) + np.sum(W4**2))
+        epoch_loss += loss
+
+        # Backward propagation
+        E4 = A4 - y_batch
+        dW4 = np.dot(A3.T, E4) + lambda_l2 * W4
+
+        E3 = np.dot(E4, W4.T) * relu_derivative(A3)
+        dW3 = np.dot(A2.T, E3) + lambda_l2 * W3
+
+        E2 = np.dot(E3, W3.T) * relu_derivative(A2)
+        dW2 = np.dot(A1.T, E2) + lambda_l2 * W2
+
+        E1 = np.dot(E2, W2.T) * relu_derivative(A1)
+        dW1 = np.dot(X_batch.T, E1) + lambda_l2 * W1
+
+        # Actualizare greutăți
+        W4 -= learning_rate * dW4 / X_batch.shape[0]
+        W3 -= learning_rate * dW3 / X_batch.shape[0]
+        W2 -= learning_rate * dW2 / X_batch.shape[0]
+        W1 -= learning_rate * dW1 / X_batch.shape[0]
+
     if epoch % 100 == 0:
-        acc = accuracy(A4, y_train_encoded)
-        print(f"Epoch {epoch}, Loss: {loss:.4f}, Accuracy: {acc:.4f}")
-
-    # Backward propagation
-    E4 = A4 - y_train_encoded
-    dW4 = np.dot(A3.T, E4)
-
-    E3 = np.dot(E4, W4.T) * relu_derivative(A3)
-    dW3 = np.dot(A2.T, E3)
-
-    E2 = np.dot(E3, W3.T) * relu_derivative(A2)
-    dW2 = np.dot(A1.T, E2)
-
-    E1 = np.dot(E2, W2.T) * relu_derivative(A1)
-    dW1 = np.dot(X_train.T, E1)
-
-    # Actualizare greutăți
-    W4 -= learning_rate * dW4 / X_train.shape[0]
-    W3 -= learning_rate * dW3 / X_train.shape[0]
-    W2 -= learning_rate * dW2 / X_train.shape[0]
-    W1 -= learning_rate * dW1 / X_train.shape[0]
+        acc = accuracy(A4, y_batch)
+        print(f"Epoch {epoch}, Loss: {epoch_loss:.4f}, Batch Accuracy: {acc:.4f}")
 
 # Evaluare pe setul de test
 Z1 = np.dot(X_test, W1)
