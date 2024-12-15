@@ -2,6 +2,15 @@ import sys
 from langdetect import detect
 
 
+def stylometric_analysis(text):
+    ch_count = len(text)
+
+    words = text.split(" ")
+    word_count = len(words)
+
+    # to continue
+
+
 def detect_language(text):
     text_language = detect(text)
     language = ""
