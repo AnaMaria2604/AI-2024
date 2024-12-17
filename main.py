@@ -1,56 +1,83 @@
-import sys
-from langdetect import detect
+# import sys
+# from langdetect import detect
 
 
-def stylometric_analysis(text):
-    ch_count = len(text)
+# def stylometric_analysis(text):
+#     ch_count = len(text)
 
-    words = text.split(" ")
-    word_count = len(words)
+#     words = text.split(" ")
+#     word_count = len(words)
 
-    # to continue
-
-
-def detect_language(text):
-    text_language = detect(text)
-    language = ""
-    if text_language == "en":
-        language = "English"
-    elif text_language == "ro":
-        language = "Romanian"
-    print(f"This text is written in {language}.")
+#     # to continue
 
 
-def command(arg):
-    if arg[1] == "file":
-        with open(arg[2], "r") as file:
-            content = file.read()
-            print(F"The text: {content}")
-            detect_language(content)
-    elif arg[1] == "text":
-        text = " ".join(arg[2:])
-        print(F"The text: {text}")
-        detect_language(text)
-    else:
-        print("Invalid command:(")
+# def detect_language(text):
+#     text_language = detect(text)
+#     language = ""
+#     if text_language == "en":
+#         language = "English"
+#     elif text_language == "ro":
+#         language = "Romanian"
+#     print(f"This text is written in {language}.")
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python main.py file/text text/file_name")
-        sys.exit(1)
-    else:
-        command(sys.argv)
+# def command(arg):
+#     if arg[1] == "file":
+#         with open(arg[2], "r") as file:
+#             content = file.read()
+#             print(F"The text: {content}")
+#             detect_language(content)
+#     elif arg[1] == "text":
+#         text = " ".join(arg[2:])
+#         print(F"The text: {text}")
+#         detect_language(text)
+#     else:
+#         print("Invalid command:(")
+
+
+# if __name__ == "__main__":
+#     if len(sys.argv) < 3:
+#         print("Usage: python main.py file/text text/file_name")
+#         sys.exit(1)
+#     else:
+#         command(sys.argv)
 
 # comanda e cv de genul: "python main.py file data.txt" sau "python main.py text ceva_text"
 
 # ------------------------------------------------------------------------------------------------------------
 
-# import requests
-# from bs4 import BeautifulSoup
-# from langdetect import detect
-# import sys
+import requests
+from bs4 import BeautifulSoup
+from langdetect import detect
+import sys
 
+def get_supported_languages():
+    url = "https://libretranslate.com/languages" # API pentru limbile suportate
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        languages = response.json()
+        # languages contine JSON de forma 
+        # [
+        #     {"code": "en", "name": "English"},
+        #     {"code": "fr", "name": "French"}
+        # ]
+
+        
+        # Mapez codurile limbilor (en) cu numele complet al limbii (English)
+        language_map = {lang["code"]: lang["name"] for lang in languages}
+        # language_map va fi un dictionar de forma
+        # {
+        #     "en": "English",
+        #     "fr": "French",
+        #     "es": "Spanish"
+        # }
+
+        return language_map
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching supported languages: {e}")
+        sys.exit(1)
 
 # def scrape_iso639_languages():
 #     import re
@@ -81,38 +108,39 @@ if __name__ == "__main__":
 #     return language_map
 
 
-# def detect_language(text, language_map):
-#     # Detectăm limba textului
-#     text_language = detect(text)
+def detect_language(text, language_map):
+    # Detectăm limba textului
+    text_language = detect(text)
 
-#     # Căutăm numele complet al limbii în dicționar
-#     language = language_map.get(text_language)
+    # Căutăm numele complet al limbii în dicționar
+    language = language_map.get(text_language)
 
-#     if language is None:
-#         print(f"Language code '{text_language}' not found in the map.")
-#         language = "Unknown Language"
+    if language is None:
+        print(f"Language code '{text_language}' not found in the map.")
+        language = "Unknown Language"
 
-#     print(f"This text is written in {language}.")
-
-
-# def command(arg, language_map):
-#     if arg[1] == "file":
-#         with open(arg[2], "r") as file:
-#             content = file.read()
-#             print(F"The text: {content}")
-#             detect_language(content, language_map)
-#     elif arg[1] == "text":
-#         text = " ".join(arg[2:])
-#         print(F"The text: {text}")
-#         detect_language(text, language_map)
-#     else:
-#         print("Invalid command:(")
+    print(f"This text is written in {language}.")
 
 
-# if __name__ == "__main__":
-#     if len(sys.argv) < 3:
-#         print("Usage: python main.py file/text text/file_name")
-#         sys.exit(1)
-#     else:
-#         language_map = scrape_iso639_languages()
-#         command(sys.argv, language_map)
+def command(arg, language_map):
+    if arg[1] == "file":
+        with open(arg[2], "r") as file:
+            content = file.read()
+            print(F"The text: {content}")
+            detect_language(content, language_map)
+    elif arg[1] == "text":
+        text = " ".join(arg[2:])
+        print(F"The text: {text}")
+        detect_language(text, language_map)
+    else:
+        print("Invalid command:(")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python main.py file/text text/file_name")
+        sys.exit(1)
+    else:
+        # language_map = scrape_iso639_languages()
+        language_map = get_supported_languages()
+        command(sys.argv, language_map)
