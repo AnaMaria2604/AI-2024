@@ -1,15 +1,32 @@
 # import sys
 # from langdetect import detect
+import re
+from collections import Counter
+
+def stylometric_analysis(text):
+    clean_text = re.sub(r'[^\w\s]', '', text).lower()
+    words = clean_text.split()
+    word_frequency = Counter(words)
+
+    ch_count = len(text) 
+    word_count = len(words) 
+    sentence_count = len(re.split(r'[.!?]', text)) - 1 
+    avg_word_length = sum(len(word) for word in words) / word_count if word_count else 0
+    avg_sentence_length = word_count / sentence_count if sentence_count else 0
+
+    results = {
+        "Character Count": ch_count,
+        "Word Count": word_count,
+        "Sentence Count": sentence_count,
+        "Average Word Length": avg_word_length,
+        "Average Sentence Length (in words)": avg_sentence_length,
+        "Word Frequency": word_frequency
+    }
+
+    return results
 
 
-# def stylometric_analysis(text):
-#     ch_count = len(text)
-
-#     words = text.split(" ")
-#     word_count = len(words)
-
-#     # to continue
-
+   
 
 # def detect_language(text):
 #     text_language = detect(text)
@@ -121,6 +138,19 @@ def detect_language(text, language_map):
 
     print(f"This text is written in {language}.")
 
+def display_results(results):
+    print("\nStylometric Analysis Results:")
+    print(f"Character Count: {results['Character Count']}")
+    print(f"Word Count: {results['Word Count']}")
+    print(f"Sentence Count: {results['Sentence Count']}")
+    print(f"Average Word Length: {results['Average Word Length']:.2f}")
+    print(f"Average Sentence Length (in words): {results['Average Sentence Length (in words)']:.2f}")
+
+    print("\nWord Frequency:")
+
+    for word, freq in results["Word Frequency"].items():
+        print(f"  {word}: {freq}")
+
 
 def command(arg, language_map):
     if arg[1] == "file":
@@ -128,11 +158,15 @@ def command(arg, language_map):
             content = file.read()
             print(F"The text: {content}")
             detect_language(content, language_map)
+            results = stylometric_analysis(content)
+            display_results(results)
     elif arg[1] == "text":
         text = " ".join(arg[2:])
         print(F"The text: {text}")
         detect_language(text, language_map)
-    else:
+        results = stylometric_analysis(text)
+        display_results(results)
+        
         print("Invalid command:(")
 
 
