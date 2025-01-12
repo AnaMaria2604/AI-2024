@@ -1,119 +1,292 @@
-import sys
+import nltk
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.probability import FreqDist
 from langdetect import detect
-from bs4 import BeautifulSoup
-import requests
-import re
+import random
 from collections import Counter
+import spacy
+from rake_nltk import Rake
+from nltk.corpus import wordnet as wn
+class TextReader:
+    @staticmethod
+    def read_text(source):
+        if source.endswith('.txt'):
+            try:
+                with open(source, 'r', encoding='utf-8') as file:
+                    return file.read()
+            except FileNotFoundError:
+                raise Exception(f"File not found: {source}")
+            except Exception as e:
+                raise Exception(f"Error reading file: {str(e)}")
+        return source
 
+class LanguageDetector:
+    @staticmethod
+    def detect_language(text):
+        try:
+            lang = detect(text)
+            lang_names = {
+                'ro': 'Romanian',
+                'en': 'English',
+                'fr': 'French',
+                'de': 'German',
+                'es': 'Spanish',
+                'it': 'Italian',
+                'pt': 'Portuguese',
+                'nl': 'Dutch',
+                'pl': 'Polish',
+                'hu': 'Hungarian',
 
-def stylometric_analysis(text):
-    clean_text = re.sub(r'[^\w\s]', '', text).lower()
-    words = clean_text.split()
-    word_frequency = Counter(words)
+            }
+            return lang_names.get(lang, lang)
+        except:
+            return "Could not detect language"
 
-    ch_count = len(text)
-    word_count = len(words)
-    sentence_count = len(re.split(r'[.!?]', text)) - 1
-    avg_word_length = sum(len(word) for word in words) / \
-        word_count if word_count else 0
-    avg_sentence_length = word_count / sentence_count if sentence_count else 0
+class StylometricAnalyzer:
+    def __init__(self):
+        nltk.download('punkt', quiet=True)
+        nltk.download('stopwords', quiet=True)
 
-    results = {
-        "Character Count": ch_count,
-        "Word Count": word_count,
-        "Sentence Count": sentence_count,
-        "Average Word Length": avg_word_length,
-        "Average Sentence Length (in words)": avg_sentence_length,
-        "Word Frequency": word_frequency
-    }
+    def analyze(self, text):
+        words = word_tokenize(text)
+        filtered_words = [word for word in words if word.isalnum()]
+        chars = len(text)
+        word_count = len(filtered_words)
 
-    return results
+        freq_dist = FreqDist(filtered_words)
+        most_common = freq_dist.most_common(10)
 
+        avg_word_length = sum(len(word) for word in filtered_words) / word_count if word_count > 0 else 0
 
-def get_supported_languages():
-    url = "https://libretranslate.com/languages"  # API pentru limbile suportate
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        languages = response.json()
-        # languages contine JSON de forma
-        # [
-        #     {"code": "en", "name": "English"},
-        #     {"code": "fr", "name": "French"}
-        # ]
+        sentences = sent_tokenize(text)
+        sentence_count = len(sentences)
 
-        # Mapez codurile limbilor (en) cu numele complet al limbii (English)
-        language_map = {lang["code"]: lang["name"] for lang in languages}
-        # language_map va fi un dictionar de forma
-        # {
-        #     "en": "English",
-        #     "fr": "French",
-        #     "es": "Spanish"
-        # }
+        return {
+            'character_count': chars,
+            'word_count': word_count,
+            'sentence_count': sentence_count,
+            'average_word_length': round(avg_word_length, 2),
+            'most_common_words': most_common
+        }
+class TextGenerator:
+    def __init__(self):
+        nltk.download('wordnet', quiet=True)
+        nltk.download('omw-1.4', quiet=True)
+        self.nlp_ro = spacy.load('ro_core_news_sm')
 
-        return language_map
+    def generate_alternative(self, text, language='ro'):
+        doc = self.nlp_ro(text)
+        tokens = [token for token in doc if not token.is_punct and not token.is_space]
 
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching supported languages: {e}")
-        sys.exit(1)
+        content_tokens = [token for token in tokens if token.pos_ in ['NOUN', 'VERB', 'ADJ']]
 
+        words_to_replace = max(1, int(len(content_tokens) * random.uniform(0.7, 0.8)))
+        tokens_to_replace = random.sample(content_tokens, words_to_replace)
 
-def detect_language(text, language_map):
-    # Detectăm limba textului
-    text_language = detect(text)
+        changes = {}
+        new_text = text
 
-    # Căutăm numele complet al limbii în dicționar
-    language = language_map.get(text_language)
+        for token in tokens_to_replace:
+            word = token.text
+            pos = token.pos_
 
-    if language is None:
-        print(f"Language code '{text_language}' not found in the map.")
-        language = "Unknown Language"
+            alternatives = self._get_alternatives(word, pos, language)
 
-    print(f"This text is written in {language}.")
+            if alternatives:
+                filtered_alternatives = [alt for alt in alternatives
+                                      if 0.5 * len(word) <= len(alt) <= 2 * len(word)]
 
+                if filtered_alternatives:
+                    new_word = self._select_contextual_replacement(
+                        filtered_alternatives,
+                        token,
+                        doc
+                    )
 
-def display_results(results):
-    print("\nStylometric Analysis Results:")
-    print(f"Character Count: {results['Character Count']}")
-    print(f"Word Count: {results['Word Count']}")
-    print(f"Sentence Count: {results['Sentence Count']}")
-    print(f"Average Word Length: {results['Average Word Length']:.2f}")
-    print(f"Average Sentence Length (in words): {
-          results['Average Sentence Length (in words)']:.2f}")
+                    if word[0].isupper():
+                        new_word = new_word.capitalize()
 
-    print("\nWord Frequency:")
+                    new_text = new_text.replace(word, new_word)
+                    changes[word] = new_word
 
-    for word, freq in results["Word Frequency"].items():
-        print(f"  {word}: {freq}")
+        return new_text, changes
 
+    def _get_alternatives(self, word, pos, language):
+        alternatives = set()
 
-def command(arg, language_map):
-    if arg[1] == "file":
-        with open(arg[2], "r") as file:
-            content = file.read()
-            print(F"The text: {content}")
-            detect_language(content, language_map)
-            results = stylometric_analysis(content)
-            display_results(results)
-    elif arg[1] == "text":
-        text = " ".join(arg[2:])
-        print(F"The text: {text}")
-        detect_language(text, language_map)
-        results = stylometric_analysis(text)
-        display_results(results)
+        synsets = wn.synsets(word, lang='ron' if language == 'ro' else 'eng')
+        if not synsets:
+            synsets = wn.synsets(word)
 
-    else:
-        print("Invalid command:(")
+        for synset in synsets:
+            alternatives.update(lemma.name().replace('_', ' ')
+                             for lemma in synset.lemmas(lang='ron' if language == 'ro' else 'eng'))
 
+            if pos == 'NOUN':
+                for hypernym in synset.hypernyms():
+                    alternatives.update(lemma.name().replace('_', ' ')
+                                     for lemma in hypernym.lemmas(lang='ron' if language == 'ro' else 'eng'))
+
+            if pos == 'ADJ':
+                for lemma in synset.lemmas(lang='ron' if language == 'ro' else 'eng'):
+                    if lemma.antonyms():
+                        alternatives.update(ant.name().replace('_', ' ')
+                                         for ant in lemma.antonyms())
+
+        return list(alternatives)
+
+    def _select_contextual_replacement(self, alternatives, token, doc):
+        context_start = max(0, token.i - 2)
+        context_end = min(len(doc), token.i + 3)
+        context = doc[context_start:context_end]
+
+        best_alternative = alternatives[0]
+        best_score = float('-inf')
+
+        for alternative in alternatives:
+            score = 0
+            alt_doc = self.nlp_ro(alternative)
+            if len(alt_doc) > 0:
+                alt_token = alt_doc[0]
+
+                if token.pos_ == 'NOUN' and token.morph.get('Number'):
+                    if token.morph.get('Number') == alt_token.morph.get('Number'):
+                        score += 1
+
+                if token.morph.get('Gender') and alt_token.morph.get('Gender'):
+                    if token.morph.get('Gender') == alt_token.morph.get('Gender'):
+                        score += 1
+
+            if score > best_score:
+                best_score = score
+                best_alternative = alternative
+
+        return best_alternative
+class KeywordExtractor:
+    def __init__(self):
+        self.nlp_ro = spacy.load('ro_core_news_sm')
+        self.rake = Rake()
+
+    def extract_keywords(self, text, language='ro'):
+        if language == 'ro':
+            return self._extract_keywords_romanian(text)
+        return self._extract_keywords_english(text)
+
+    def _extract_keywords_romanian(self, text):
+        doc = self.nlp_ro(text)
+
+        keywords = []
+        for token in doc:
+            if token.pos_ in ['NOUN', 'VERB'] and not token.is_stop:
+                keywords.append(token.text)
+
+        keyword_freq = Counter(keywords)
+        top_keywords = [word for word, freq in keyword_freq.most_common(5)]
+
+        sentences = []
+        for sent in doc.sents:
+            for keyword in top_keywords:
+                if keyword in sent.text:
+                    sentences.append(f"Cuvânt cheie '{keyword}': {sent.text.strip()}")
+                    break
+
+        return top_keywords, sentences
+
+    def _extract_keywords_english(self, text):
+        self.rake.extract_keywords_from_text(text)
+        keywords = self.rake.get_ranked_phrases()[:5]
+
+        sentences = []
+        doc = self.nlp_ro(text)
+        for keyword in keywords:
+            for sent in doc.sents:
+                if keyword.lower() in sent.text.lower():
+                    sentences.append(f"Keyword '{keyword}': {sent.text.strip()}")
+                    break
+
+        return keywords, sentences
+def main():
+    reader = TextReader()
+    detector = LanguageDetector()
+    analyzer = StylometricAnalyzer()
+    generator = TextGenerator()
+    extractor = KeywordExtractor()
+
+    filenames = [
+        "input_en.txt",
+        "input_ro.txt",
+    ]
+
+    results = []
+    for filename in filenames:
+        try:
+            text = reader.read_text(filename)
+            language = detector.detect_language(text)
+            print(f"\nDetected Language: {language}")
+
+            style_info = analyzer.analyze(text)
+            print("\nStylometric Information:")
+            for key, value in style_info.items():
+                print(f"{key}: {value}")
+
+            alt_text, changes = generator.generate_alternative(text, language[:2].lower())
+            print("\nAlternative Version and Changes:")
+            print(alt_text)
+            print("\nChanges Made:")
+            for original, alternative in changes.items():
+                print(f"{original} -> {alternative}")
+
+            keywords, sentences = extractor.extract_keywords(text, language[:2].lower())
+            print("\nKeywords and Associated Sentences:")
+            print("Keywords:", keywords)
+            print("\nGenerated Sentences:")
+            for sentence in sentences:
+                print(sentence)
+
+        except Exception as e:
+            print(f"Error processing {filename}: {str(e)}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python main.py file/text text/file_name")
-        sys.exit(1)
-    else:
-        language_map = get_supported_languages()
-        command(sys.argv, language_map)
+    main()
 
 
-# comanda e cv de genul: "python main.py file data.txt" sau "python main.py text ceva_text"
-# ex: python main.py file phrase.txt
+
+# #from transformers import pipeline, AutoTokenizer, AutoModelForMaskedLM
+# import spacy
+# from collections import Counter
+
+
+# class KeywordExtractor:
+#     def __init__(self):
+#         self.nlp_ro = spacy.load('ro_core_news_sm')
+#         self.tokenizer = AutoTokenizer.from_pretrained("dumitrescustefan/bert-base-romanian-cased-v1")
+#         self.model = AutoModelForMaskedLM.from_pretrained("dumitrescustefan/bert-base-romanian-cased-v1")
+#         self.fill_mask = pipeline("fill-mask", model=self.model, tokenizer=self.tokenizer)
+
+#     def extract_keywords(self, text):
+#         # Identifică cuvintele cheie
+#         doc = self.nlp_ro(text)
+#         keywords = [token.text for token in doc if token.pos_ in ['NOUN', 'VERB'] and not token.is_stop]
+
+#         # Obține primele 5 cuvinte cheie frecvente
+#         keyword_freq = Counter(keywords)
+#         top_keywords = [word for word, _ in keyword_freq.most_common(5)]
+
+#         # Generează propoziții noi pentru fiecare cuvânt cheie
+#         generated_sentences = []
+#         for keyword in top_keywords:
+#             generated_sentence = self._generate_sentence_with_keyword(keyword)
+#             generated_sentences.append(f"Cuvânt cheie '{keyword}': {generated_sentence}")
+
+#         return top_keywords, generated_sentences
+
+#     def _generate_sentence_with_keyword(self, keyword):
+#         # Folosește completarea textului cu un cuvânt mascat pentru a genera o propoziție
+#         prompt = f"{keyword} este un aspect foarte [MASK]."
+#         suggestions = self.fill_mask(prompt)
+#         generated_sentence = suggestions[0]['sequence']  # Alege prima sugestie
+
+#         return generated_sentence.replace('[SEP]', '').strip()
+
+
+
