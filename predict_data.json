@@ -1,0 +1,30 @@
+[
+    {
+        "Sex": 1,
+        "Age": 0,
+        "Number": 1,
+        "Home": 2,
+        "Zone": 0,
+        "Ext": 0.8731221453,
+        "Obs": 1.5634389273,
+        "Shy": 5.0,
+        "Calm": 4.5634389273,
+        "Frightened": 3.8731221453,
+        "Intelligent": 4.0,
+        "Vigilant": 5.0,
+        "Persevering": 3.0,
+        "Affectionate": 4.0,
+        "Friendly": 2.7462442906,
+        "Solitary": 3.1268778547,
+        "Brutal": 3.4365610727,
+        "Dominant": 4.0,
+        "Aggressive": 3.4365610727,
+        "Impulsive": 4.0,
+        "Predictable": 3.1268778547,
+        "Distracted": 3.4365610727,
+        "Abundance": 0,
+        "PredBird": 0.0,
+        "PredMamm": 0.0,
+        "More": 0
+    }
+]

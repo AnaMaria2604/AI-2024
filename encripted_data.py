@@ -57,9 +57,11 @@ for cheie, distinct_values in distinct_non_numeric_count_per_column.items():
 
 print("\n-------------------------------------------------------------------------------------------------------------")
 for cheie in encripting_per_header:
-    print(f"\nThese are the encripted values for {cheie}:")
-    for valoare in encripting_per_header[cheie]:
-        print(valoare, ":", encripting_per_header[cheie][valoare])
+
+    if cheie!="More":
+        print(f"\nThese are the encripted values for {cheie}:")
+        for valoare in encripting_per_header[cheie]:
+            print(valoare, ":", encripting_per_header[cheie][valoare])
 
 # print("\n-------------------------------------------------------------------------------------------------------------")
 # print("Criptarea finală a datelor din 'data_without_duplicates':")
