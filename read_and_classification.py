@@ -18,7 +18,6 @@ scaler = model_weights["scaler"]
 class_map = model_weights["class_map"]
 
 # Funcții activare
-
 def relu(x):
     return np.maximum(0, x)
 
