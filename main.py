@@ -11,61 +11,46 @@ import json
 
 attributes_dict = {
     "Sex": [
-        ("M", "male", 0),
-        ("F", "female", 1)
+        ("M", "male", 0.0),
+        ("F", "female", 1.0)
     ],
     "Age": [
-        ("Moinsde1", "Less than 1 year", 0),
-        ("1a2", "1-2 years", 1),
-        ("2a10", "2-10 years", 2),
-        ("Plusde10", "More than 10 years", 3)
-    ],
-    "Race": [
-        ("BEN", "Bengal", 0),
-        ("SBI", "Birman", 1),
-        ("BRI", "British Shorthair", 2),
-        ("CHA", "Chartreux", 3),
-        ("EUR", "European", 4),
-        ("MCO", "Maine coon", 5),
-        ("PER", "Persian", 6),
-        ("RAG", "Ragdoll", 7),
-        ("SPH", "Savannah", 8),
-        ("ORI", "Sphynx", 9),
-        ("TUV", "Siamese", 10),
-        ("Autre", "Turkish angora", 11),
-        ("NSP", "No breed", 12)
+        ("Moinsde1", "Less than 1 year", 0.0),
+        ("1a2", "1-2 years", 1.0),
+        ("2a10", "2-10 years", 2.0),
+        ("Plusde10", "More than 10 years", 3.0)
     ],
     "Number": [
-        ("1", "one cat in the household", 1),
-        ("2", "two cats in the household", 2),
-        ("3", "three cats in the household", 3),
-        ("4", "four cats in the household", 4),
-        ("5", "five cats in the household", 5),
+        ("1", "one cat in the household", 1.0),
+        ("2", "two cats in the household", 2.0),
+        ("3", "three cats in the household", 3.0),
+        ("4", "four cats in the household", 4.0),
+        ("5", "five cats in the household", 5.0),
         ("Plusde5", "more than five cats in the household", 0.0),
     ],
     "Home": [
-        ("ASB", "Apartment without balcony", 0),
-        ("AAB", "Apartment with balcony or terrace", 1),
-        ("ML", "House in a subdivision", 2),
-        ("MI", "Individual house", 3)
+        ("ASB", "Apartment without balcony", 0.0),
+        ("AAB", "Apartment with balcony or terrace", 1.0),
+        ("ML", "House in a subdivision", 2.0),
+        ("MI", "Individual house", 3.0)
     ],
     "Zone": [
-        ("U", "Urban", 0),
-        ("PU", "Periurban", 1),
-        ("R", "Rural", 2)
+        ("U", "Urban", 0.0),
+        ("PU", "Periurban", 1.0),
+        ("R", "Rural", 2.0)
     ],
     "Ext": [
-        ("1", "no time outside", 0),
-        ("2", "less than one hour outside", 1),
-        ("3", "1 to 5 hours outside", 2),
-        ("4", "more than 5 hours outside", 3),
-        ("5", "All the time outside", 4)
+        ("1", "no time outside", 0.0),
+        ("2", "less than one hour outside", 1.0),
+        ("3", "1 to 5 hours outside", 2.0),
+        ("4", "more than 5 hours outside", 3.0),
+        ("5", "All the time outside", 4.0)
     ],
     "Obs": [
-        ("1", "None", 0),
-        ("2", "Limited (less than one hour)", 1),
-        ("3", "Moderate (1 to 5 hours)", 2),
-        ("4", "Long (more than 5 hours)", 3)
+        ("1", "None", 0.0),
+        ("2", "Limited (less than one hour)", 1.0),
+        ("3", "Moderate (1 to 5 hours)", 2.0),
+        ("4", "Long (more than 5 hours)", 3.0)
     ],
     "Shy": [
         ("1", "reclusive", 1.0),
@@ -173,24 +158,24 @@ attributes_dict = {
         ("5", "scattered", 5.0)
     ],
     "Abundance": [
-        ("1", "Low", 0),
-        ("2", "Moderate", 1),
-        ("3", "High", 2),
-        ("NSP", "I don’t know", 3)
+        ("1", "Low", 0.0),
+        ("2", "Moderate", 1.0),
+        ("3", "High", 2.0),
+        ("NSP", "I don’t know", 3.0)
     ],
     "PredBird": [
         ("1", "Never", 0),
-        ("2", "Rarely (1 to 5 times a year)", 1),
-        ("3", "Sometimes (5 to 10 times a year)", 2),
-        ("4", "Often (1 to 3 times a month)", 3),
-        ("5", "Very often (once a week or more)", 4)
+        ("2", "Rarely (1 to 5 times a year)", 1.0),
+        ("3", "Sometimes (5 to 10 times a year)", 2.0),
+        ("4", "Often (1 to 3 times a month)", 3.0),
+        ("5", "Very often (once a week or more)", 4.0)
     ],
     "PredMamm": [
         ("1", "Never", 0),
-        ("2", "Rarely (1 to 5 times a year)", 1),
-        ("3", "Sometimes (5 to 10 times a year)", 2),
-        ("4", "Often (1 to 3 times a month)", 3),
-        ("5", "Very often (once a week or more)", 4)
+        ("2", "Rarely (1 to 5 times a year)", 1.0),
+        ("3", "Sometimes (5 to 10 times a year)", 2.0),
+        ("4", "Often (1 to 3 times a month)", 3.0),
+        ("5", "Very often (once a week or more)", 4.0)
     ]
 }
 
