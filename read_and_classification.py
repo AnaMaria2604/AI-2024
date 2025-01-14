@@ -25,31 +25,59 @@ def softmax(x):
     exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return exp_x / np.sum(exp_x, axis=1, keepdims=True)
 
-# Citirea fișierului cu trăsături pentru prezicții
-with open("predict_data.json") as f_predict:
-    predict_data = json.load(f_predict)
+# Funcție pentru a genera stringul cu predicțiile
+race_value_dict = {
+    1:"Birman",
+    2:"European",
+    3:"Maine coon",
+    4:"Bengal",
+    5:"Brititsh Shorthair",
+    6:"No Race",
+    7:"Persian",
+    8:"Shpynx",
+    9:"Ragdoll",
+    10:"Other",
+    11:"Unknown",
+    12:"Chartreux",
+    13:"Siamese",
+    14:"Turkish angora",
+    15:"Savannah"
+}
 
-# Pregătirea datelor
-X_predict = np.array([list(item.values()) for item in predict_data])
-X_predict = scaler.transform(X_predict)  # Standardizare
+def predict_and_generate_output():
+    # Citirea fișierului cu trăsături pentru prezicții
+    with open("predict_data.json") as f_predict:
+        predict_data = json.load(f_predict)
 
-# Forward propagation pentru preziceri
-Z1 = np.dot(X_predict, W1)
-A1 = relu(Z1)
-Z2 = np.dot(A1, W2)
-A2 = relu(Z2)
-Z3 = np.dot(A2, W3)
-A3 = relu(Z3)
-Z4 = np.dot(A3, W4)
-A4 = softmax(Z4)
+    # Pregătirea datelor
+    X_predict = np.array([list(item.values()) for item in predict_data])
+    X_predict = scaler.transform(X_predict)  # Standardizare
 
-# Găsirea claselor prezise
-predicted_classes = A4.argmax(axis=1)
+    # Forward propagation pentru preziceri
+    Z1 = np.dot(X_predict, W1)
+    A1 = relu(Z1)
+    Z2 = np.dot(A1, W2)
+    A2 = relu(Z2)
+    Z3 = np.dot(A2, W3)
+    A3 = relu(Z3)
+    Z4 = np.dot(A3, W4)
+    A4 = softmax(Z4)
 
-# Maparea înapoi la clasele originale
-class_map_inverse = {v: k for k, v in class_map.items()}
-predicted_races = [class_map_inverse[cls] for cls in predicted_classes]
+    # Găsirea claselor prezise
+    predicted_classes = A4.argmax(axis=1)
 
-# Afișarea rezultatelor
-for i, item in enumerate(predict_data):
-    print(f"Datele: {item}, Rasa prezisă: {predicted_races[i]}")
+    # Maparea înapoi la clasele originale
+    class_map_inverse = {v: k for k, v in class_map.items()}
+    predicted_races = [class_map_inverse[cls] for cls in predicted_classes]
+
+    # Construirea stringului cu rezultatele
+    result_string = ""
+    for i, item in enumerate(predict_data):
+        print(predicted_races[i])
+        result_string += f"Predicted race: {race_value_dict.get(predicted_races[i])}\n"
+
+    return result_string
+
+# Exemplu de utilizare
+# result = predict_and_generate_output("predict_data.json")
+# print(result)

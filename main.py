@@ -8,6 +8,9 @@ import spacy
 from rake_nltk import Rake
 from nltk.corpus import wordnet as wn
 import json
+import tkinter as tk
+from tkinter import messagebox
+from read_and_classification import predict_and_generate_output
 
 attributes_dict = {
     "Sex": [
@@ -192,34 +195,6 @@ class TextReader:
                 raise Exception(f"Error reading file: {str(e)}")
         return source
 
-class AttributeMatcher:
-    def __init__(self, attributes):
-        self.attributes = attributes
-        self.nlp = spacy.load("en_core_web_sm")
-
-    def match_attributes(self, text, characteristics):
-        sentences = sent_tokenize(text)
-
-        for sentence in sentences:
-            print(f"Analyzing sentence: {sentence}")
-            words = word_tokenize(sentence)
-            for key, values in self.attributes.items():
-                for _, word, value in values:
-                    if word in words:
-                        characteristics[key] = value
-                        print(f"Found attribute match: {word} -> {key}: {value}")
-
-            # Use SpaCy to extract key phrases and retry matching
-            doc = self.nlp(sentence)
-            important_words = [token.text for token in doc if token.pos_ in ["NOUN", "VERB", "ADJ"]]
-
-            for key, values in self.attributes.items():
-                for _, word, value in values:
-                    if word in important_words:
-                        characteristics[key] = value
-                        print(f"Found attribute match in important words: {word} -> {key}: {value}")
-
-        return characteristics
 
 class LanguageDetector:
     @staticmethod
@@ -243,62 +218,104 @@ class LanguageDetector:
         except:
             return "Could not detect language"
 
+class AttributeMatcher:
+    def __init__(self, attributes):
+        self.attributes = attributes
+        self.nlp = spacy.load("en_core_web_sm")
 
-def main():
-    reader = TextReader()
-    matcher = AttributeMatcher(attributes_dict)
+    def match_attributes(self, text):
+        characteristics = {key: None for key in self.attributes.keys()}
+        sentences = sent_tokenize(text)
 
-    characteristics = {
-        "Sex": None,
-        "Age": None,
-        "Number": None,
-        "Home": None,
-        "Zone": None,
-        "Ext": None,
-        "Obs": None,
-        "Shy": None,
-        "Calm": None,
-        "Frightened": None,
-        "Intelligent": None,
-        "Vigilant": None,
-        "Persevering": None,
-        "Affectionate": None,
-        "Friendly": None,
-        "Solitary": None,
-        "Brutal": None,
-        "Dominant": None,
-        "Aggressive": None,
-        "Impulsive": None,
-        "Predictable": None,
-        "Distracted": None,
-        "Abundance": None,
-        "PredBird": None,
-        "PredMamm": None,
-        "More": 0.0,
-    }
+        for sentence in sentences:
+            print(f"Analyzing sentence: {sentence}")
+            words = word_tokenize(sentence)
+            for key, values in self.attributes.items():
+                for _, word, value in values:
+                    if word in words:
+                        characteristics[key] = value
+                        print(f"Found attribute match: {word} -> {key}: {value}")
 
-    filename = "input_en.txt"
+            doc = self.nlp(sentence)
+            important_words = [token.text for token in doc if token.pos_ in ["NOUN", "VERB", "ADJ"]]
 
-    try:
-        text = reader.read_text(filename)
-        print(f"Processing text from {filename}...")
-        characteristics = matcher.match_attributes(text, characteristics)
+            for key, values in self.attributes.items():
+                for _, word, value in values:
+                    if word in important_words:
+                        characteristics[key] = value
+                        print(f"Found attribute match in important words: {word} -> {key}: {value}")
 
-        # Replace None values with 3.0
-        characteristics = {key: (value if value is not None else 3.0) for key, value in characteristics.items()}
+        characteristics = {k: (v if v is not None else 3.0) for k, v in characteristics.items()}
+        return characteristics
+
+def predict_attributes():
+    user_input = text_entry.get("1.0", tk.END).strip()
+    if user_input:
+        matcher = AttributeMatcher(attributes_dict)
+        characteristics = matcher.match_attributes(user_input)
+        
+        # Adding "More": "0.0" to the characteristics dictionary
+        characteristics["More"] = 0.0
 
         print("\nExtracted Characteristics:")
         for key, value in characteristics.items():
             print(f"{key}: {value}")
 
-        # Save to JSON file
         output_path = "predict_data.json"
         with open(output_path, "w") as json_file:
             json.dump([characteristics], json_file, indent=4)
         print(f"\nResults saved to {output_path}")
 
-    except Exception as e:
-        print(f"Error processing file: {str(e)}")
+        output = json.dumps(characteristics, indent=4)
+        messagebox.showinfo("Predicted Attributes", output)
+    else:
+        messagebox.showwarning("Warning", "Please enter some text before predicting.")
 
-if __name__ == "__main__":
-    main()
+def display_results():
+    try:
+        # Call the predict_and_generate_output function and get the output
+        output = predict_and_generate_output()
+
+        # Display the output in a messagebox
+        if output:
+            messagebox.showinfo("Prediction Results", output)
+        else:
+            messagebox.showwarning("Warning", "No results were generated. Please try again.")
+    except Exception as e:
+        # Handle errors gracefully
+        messagebox.showerror("Error", f"An error occurred while displaying results: {str(e)}")
+
+# Creează fereastra principală
+root = tk.Tk()
+root.title("Attribute Matcher")
+root.geometry("600x400")
+
+# Label
+label = tk.Label(root, text="Enter text to match attributes:")
+label.pack(pady=10)
+
+# Frame pentru text și scrollbar
+text_frame = tk.Frame(root)
+text_frame.pack(pady=10, fill=tk.BOTH, expand=True)
+
+# Text widget
+text_entry = tk.Text(text_frame, wrap=tk.WORD, height=10)
+text_entry.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+# Scrollbar
+scrollbar = tk.Scrollbar(text_frame, command=text_entry.yview)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+# Asociază scrollbar-ul cu widget-ul Text
+text_entry.config(yscrollcommand=scrollbar.set)
+
+# Predict Attributes Button
+predict_button = tk.Button(root, text="Predict Attributes", command=predict_attributes)
+predict_button.pack(pady=10)
+
+# Predict Race Button
+race_button = tk.Button(root, text="Predict Race", command=display_results)
+race_button.pack(pady=10)
+
+# Rulează aplicația GUI
+root.mainloop()
