@@ -11,6 +11,9 @@ import json
 import tkinter as tk
 from tkinter import messagebox
 from read_and_classification import predict_and_generate_output
+from PIL import Image, ImageTk
+import os
+
 
 attributes_dict = {
     "Sex": [
@@ -273,17 +276,45 @@ def predict_attributes():
 
 def display_results():
     try:
-        # Call the predict_and_generate_output function and get the output
         output = predict_and_generate_output()
 
-        # Display the output in a messagebox
-        if output:
-            messagebox.showinfo("Prediction Results", output)
-        else:
-            messagebox.showwarning("Warning", "No results were generated. Please try again.")
+        # Extract predicted race from the output
+        predicted_race = output.split(": ")[1].strip() 
+
+        image_path = os.path.join("images", f"{predicted_race}.jpg")
+        if not os.path.exists(image_path):
+            image_path = os.path.join("images", "other.jpg")  
+
+        # Open and resize the image while preserving aspect ratio
+        image = Image.open(image_path)
+        max_size = (500, 500)  # Maximum width and height
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+        img = ImageTk.PhotoImage(image)
+
+        # Create a new window for the result
+        result_window = tk.Toplevel(root)
+        result_window.title("Prediction Results")
+
+        # Add the image to the new window
+        img_label = tk.Label(result_window, image=img)
+        img_label.image = img
+        img_label.pack()
+
+        # add text
+        text_label = tk.Label(
+        result_window, 
+        text=f"Predicted Race: {predicted_race}", 
+        font=("Arial", 14, "bold"),  
+        fg="#333333",               
+        bg="#f0f0f0"                
+        )
+        text_label.pack(pady=10)  
+
     except Exception as e:
-        # Handle errors gracefully
         messagebox.showerror("Error", f"An error occurred while displaying results: {str(e)}")
+
+
 
 # Creează fereastra principală
 root = tk.Tk()
