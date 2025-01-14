@@ -319,34 +319,53 @@ def display_results():
 # Creează fereastra principală
 root = tk.Tk()
 root.title("Attribute Matcher")
-root.geometry("600x400")
+root.geometry("600x500")
+root.configure(bg="coral2")
 
-# Label
-label = tk.Label(root, text="Enter text to match attributes:")
-label.pack(pady=10)
+# Frame principal pentru centralizare
+main_frame = tk.Frame(root)
+main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-# Frame pentru text și scrollbar
-text_frame = tk.Frame(root)
-text_frame.pack(pady=10, fill=tk.BOTH, expand=True)
+# Configurează layout-ul ferestrei
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
+
+# Configurează layout-ul pentru main_frame
+main_frame.grid_rowconfigure(0, weight=1)
+main_frame.grid_rowconfigure(1, weight=1)
+main_frame.grid_rowconfigure(2, weight=1)
+main_frame.grid_columnconfigure(0, weight=1)
+main_frame.grid_columnconfigure(1, weight=1)
+
+# Titlu principal
+welcome_label = tk.Label(main_frame, text="Welcome!",
+                         font=("Arial", 20, "bold"), fg="coral3")
+welcome_label.grid(row=0, column=0, columnspan=2, pady=20)
+
+# Frame pentru instrucțiuni și input
+input_frame = tk.Frame(main_frame)
+input_frame.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
+
+# Label pentru instrucțiuni
+label = tk.Label(
+    input_frame, text="Enter description:", font=("Arial", 14, "bold"))
+label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
 # Text widget
-text_entry = tk.Text(text_frame, wrap=tk.WORD, height=10)
-text_entry.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-# Scrollbar
-scrollbar = tk.Scrollbar(text_frame, command=text_entry.yview)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-# Asociază scrollbar-ul cu widget-ul Text
-text_entry.config(yscrollcommand=scrollbar.set)
+text_entry = tk.Text(input_frame, wrap=tk.WORD, height=5, font=(
+    "Arial", 12), bg="darksalmon", bd=0, highlightthickness=1, highlightbackground="gray")
+text_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
 # Predict Attributes Button
-predict_button = tk.Button(root, text="Predict Attributes", command=predict_attributes)
-predict_button.pack(pady=10)
+predict_button = tk.Button(
+    main_frame, text="Predict Attributes", command=predict_attributes, font=("Arial", 12, "bold")
+)
+predict_button.grid(row=2, column=0, pady=5, padx=5, sticky="ew")
 
 # Predict Race Button
-race_button = tk.Button(root, text="Predict Race", command=display_results)
-race_button.pack(pady=10)
+race_button = tk.Button(main_frame, text="Predict Race",
+                        command=display_results, font=("Arial", 12, "bold"))
+race_button.grid(row=2, column=1, pady=5, padx=5, sticky="ew")
 
 # Rulează aplicația GUI
 root.mainloop()
